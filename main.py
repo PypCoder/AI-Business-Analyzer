@@ -8,7 +8,6 @@ from database.write import write_summary
 from config.settings import model, GEMINI_API_KEY, SERPER_API_KEY
 
 import streamlit as st
-import os
 
 
 # =====================================================
@@ -170,6 +169,9 @@ if run_button and goal and not st.session_state.is_running:
     st.session_state.is_running = True
 
     with st.spinner("Running AI analysis..."):
+        if not gemini_key or not serper_key:
+            st.error("⚠️ API keys are missing. Configure them in Streamlit Secrets or enter them in the sidebar.")
+            st.stop()  # Prevent further execution
         result = run_agent(goal)
         st.session_state.report = result
 
