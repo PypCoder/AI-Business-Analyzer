@@ -38,6 +38,7 @@ outputs/
 # Streamlit
 # ----------------------------
 .streamlit/secrets.toml
+.devcontainer/
 
 # ----------------------------
 # OS files
