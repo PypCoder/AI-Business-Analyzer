@@ -1,6 +1,6 @@
 import os, re, json, datetime
 import streamlit as st
-from config.settings import model, get_gemini, get_serper, set_gemini, set_serper
+from config.settings import model, get_gemini, get_serper
 from utils.build_pdf import build_pdf
 
 
@@ -20,7 +20,7 @@ with st.sidebar:
         value=st.session_state.get("gemini_key", get_gemini()),
         )
     st.session_state["gemini_key"] = gemini_key
-    set_gemini(gemini_key)
+    os.environ["GOOGLE_API_KEY"] = st.session_state.get("gemini_key", "")
     st.caption("[Get free key →](https://aistudio.google.com/app/apikey)")
     serper_key = st.text_input(
         "Serper API Key", 
@@ -29,7 +29,7 @@ with st.sidebar:
         value=st.session_state.get("serper_key", get_serper()),
         )
     st.session_state["serper_key"] = serper_key
-    set_serper(serper_key)
+    os.environ["SERPER_API_KEY"] = st.session_state.get("serper_key", "")
     st.caption("[Get free key →](https://serper.dev/)")
 
     keys_ready = bool(gemini_key and serper_key)
@@ -94,9 +94,6 @@ with TAB_REPORT:
                         from database.read import search_related_summaries
                         from database.write import write_summary
                         import os, re, json
-
-                        os.environ["GOOGLE_API_KEY"] = gemini_key
-                        os.environ["SERPER_API_KEY"] = serper_key
 
                         prev = search_related_summaries(goal) if use_memory else []
                         memory = "\n\n".join(prev) if prev else ""
