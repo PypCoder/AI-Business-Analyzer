@@ -1,203 +1,361 @@
-from agents.planner import planner_task
-from agents.researcher import web_search
-from agents.aggregator import aggregate_results
-from agents.reporter import report_task
-from agents.summarizer import summarize_task
-from database.read import search_related_summaries
-from database.write import write_summary
-from config.settings import model, GEMINI_API_KEY, SERPER_API_KEY
+# import os
+# import datetime
+# import streamlit as st
 
+# from config.settings import model
+# from utils.build_pdf import build_pdf
+
+# st.set_page_config(
+#     page_title="AI Business Analyzer",
+#     page_icon="🚀",
+#     layout="centered",
+# )
+
+# if "report" not in st.session_state:
+#     st.session_state.report = None
+# if "is_running" not in st.session_state:
+#     st.session_state.is_running = False
+# if "last_goal" not in st.session_state:
+#     st.session_state.last_goal = ""
+
+# with st.sidebar:
+#     st.title("Configuration")
+
+#     st.subheader("API Keys")
+#     gemini_key = st.text_input("Gemini API Key", type="password", placeholder="AIza...")
+#     st.caption("[Get free key →](https://aistudio.google.com/app/apikey)")
+
+#     serper_key = st.text_input("Serper API Key", type="password", placeholder="your-serper-key")
+#     st.caption("[Get free key →](https://serper.dev/)")
+
+#     st.divider()
+
+#     st.subheader("Settings")
+#     report_depth = st.selectbox("Report Depth", ["Standard", "Detailed", "Executive Summary"])
+#     max_queries = st.slider("Max Search Queries", 1, 10, 5)
+#     use_memory = st.toggle("Use Memory", value=True)
+
+# st.title("🚀 AI Business Analyzer")
+# st.caption("Multi-agent strategic research · Gemini · Serper · Memory")
+# st.divider()
+
+# goal = st.text_input(
+#     "Business goal",
+#     placeholder="e.g. Analyze competitive landscape of B2B SaaS invoicing tools in 2025",
+# )
+
+# keys_ready = bool(gemini_key and serper_key)
+
+# if not keys_ready:
+#     st.warning("Enter your API keys in the sidebar to run analysis.")
+
+# def run_agent(goal):
+#     from agents.planner import planner_task
+#     from agents.researcher import web_search
+#     from agents.aggregator import aggregate_results
+#     from agents.reporter import report_task
+#     from agents.summarizer import summarize_task
+#     from database.read import search_related_summaries
+#     from database.write import write_summary
+
+#     os.environ["GOOGLE_API_KEY"] = gemini_key
+#     os.environ["SERPER_API_KEY"] = serper_key
+
+#     previous_summaries = search_related_summaries(goal) if use_memory else []
+#     context_memory = "\n\n".join(previous_summaries) if previous_summaries else ""
+
+#     queries = [q.strip() for q in planner_task(goal).split("\n") if q.strip()][:max_queries]
+
+#     search_results = [web_search(q) for q in queries]
+#     if not search_results:
+#         return None
+
+#     aggregated = aggregate_results(search_results)
+#     if not aggregated:
+#         return None
+
+#     report = report_task(goal=goal, research_data=aggregated, past_insights=context_memory)
+
+#     summary = summarize_task(report)
+#     write_summary(original_text=report, summary=summary, model_name=model)
+
+#     return {
+#         "queries": queries,
+#         "aggregated": aggregated,
+#         "report": report,
+#         "memory_used": bool(previous_summaries),
+#         "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+#     }
+
+# col1, col2 = st.columns([3, 1])
+
+# with col1:
+#     run_clicked = st.button(
+#         "Run Analysis",
+#         type="primary",
+#         use_container_width=True,
+#         disabled=not keys_ready or st.session_state.is_running,
+#     )
+
+# with col2:
+#     clear_clicked = st.button("Clear", use_container_width=True)
+
+# if clear_clicked:
+#     st.session_state.report = None
+#     st.session_state.last_goal = ""
+#     st.rerun()
+
+# if run_clicked:
+#     if not goal.strip():
+#         st.error("Please enter a business goal.")
+#     else:
+#         st.session_state.is_running = True
+#         st.session_state.last_goal = goal
+
+#         with st.spinner("Running analysis..."):
+#             result = run_agent(goal)
+#             st.session_state.report = result
+
+#         st.session_state.is_running = False
+#         st.rerun()
+
+# if st.session_state.report:
+#     result = st.session_state.report
+#     goal_used = st.session_state.last_goal
+
+#     st.divider()
+
+#     col_a, col_b, col_c = st.columns(3)
+#     col_a.metric("Queries Run", len(result["queries"]))
+#     col_b.metric("Memory", "On" if result["memory_used"] else "Off")
+#     col_c.metric("Generated", result["timestamp"])
+
+#     st.divider()
+
+#     with st.expander("Search Queries", expanded=False):
+#         for i, q in enumerate(result["queries"], 1):
+#             st.write(f"{i}. {q}")
+
+#     with st.expander("Aggregated Research", expanded=False):
+#         st.write(result["aggregated"])
+
+#     st.subheader("Strategic Report")
+#     st.markdown(result["report"])
+
+#     st.divider()
+
+#     # Download
+#     goal_slug = goal_used[:40].strip().lower().replace(" ", "-")
+#     filename = f"business-analysis_{goal_slug}_{result['timestamp'].replace(' ', '_').replace(':', '-')}.pdf"
+
+#     pdf_bytes = build_pdf(goal_used, result, report_depth)
+
+#     st.download_button(
+#         label="⬇ Download Report (.pdf)",
+#         data=pdf_bytes,
+#         file_name=filename,
+#         mime="application/pdf",
+#         use_container_width=True,
+#     )
+
+
+
+
+
+
+import os, re, json, datetime
 import streamlit as st
+from config.settings import model, GEMINI_API_KEY, SERPER_API_KEY
+from utils.build_pdf import build_pdf
 
 
-# =====================================================
-# Page Config
-# =====================================================
-st.set_page_config(
-    page_title="AI Business Analyzer",
-    page_icon="🚀",
-    layout="centered",
-)
+st.set_page_config(page_title="AI Business Analyzer", page_icon="🚀", layout="centered")
 
-st.title("🚀 AI Business Analyzer")
-st.caption("AI-powered strategic research engine with memory")
+for k, v in [("report", None), ("is_running", False), ("last_goal", ""), ("chart_data", None)]:
+    if k not in st.session_state:
+        st.session_state[k] = v
 
-
-# =====================================================
-# Sidebar — Configuration
-# =====================================================
 with st.sidebar:
-    st.header("⚙️ Configuration")
-
-    st.subheader("🔑 API Keys")
-
+    st.title("Configuration")
+    st.subheader("API Keys")
     gemini_key = st.text_input(
-        "Gemini API Key",
-        value=GEMINI_API_KEY or "",
-        type="password",
+        "Gemini API Key", 
+        type="password", 
         placeholder="AIza...",
-        help="Get your key at https://ai.google.dev/"
-    )
-
+        value=st.session_state.get("gemini_key", GEMINI_API_KEY),
+        )
+    st.session_state["gemini_key"] = gemini_key
+    st.caption("[Get free key →](https://aistudio.google.com/app/apikey)")
     serper_key = st.text_input(
-        "Serper.dev API Key",
-        value=SERPER_API_KEY or "",
-        type="password",
+        "Serper API Key", 
+        type="password", 
         placeholder="your-serper-key",
-        help="Get your key at https://serper.dev/"
-    )
+        value=st.session_state.get("serper_key", SERPER_API_KEY),
+        )
+    st.session_state["serper_key"] = serper_key
+    st.caption("[Get free key →](https://serper.dev/)")
 
     keys_ready = bool(gemini_key and serper_key)
-
-    if keys_ready:
-        st.success("✅ API keys set")
-    else:
-        st.warning("⚠️ Both API keys are required to run analysis.")
+    st.markdown("✅ Keys configured" if keys_ready else "⚠️ Both keys required")
 
     st.divider()
+    st.subheader("Settings")
+    report_depth = st.selectbox("Report Depth", ["Standard", "Detailed", "Executive Summary"])
+    max_queries  = st.slider("Max Search Queries", 1, 10, 5)
+    use_memory   = st.toggle("Use Memory", value=True)
 
-    st.subheader("🛠️ Settings")
+st.title("🚀 AI Business Analyzer")
+st.caption("Multi-agent strategic research · Gemini · Serper · Memory")
+st.divider()
 
-    report_depth = st.selectbox(
-        "Report Depth",
-        options=["Standard", "Detailed", "Executive Summary"],
-        help="Controls how comprehensive the generated report will be."
+TAB_NAMES = ["📄 Report", "💬 Chat", "🧩 SWOT Board", "🕒 History"]
+tabs = st.tabs(TAB_NAMES)
+TAB_REPORT, TAB_CHAT, TAB_SWOT, TAB_HISTORY = tabs
+# To add a new tab: append to TAB_NAMES, unpack one more variable above, render inside it below.
+
+def run_agent(goal: str) -> dict | None:
+    from agents.planner    import planner_task
+    from agents.researcher import web_search
+    from agents.aggregator import aggregate_results
+    from agents.reporter   import report_task
+    from agents.summarizer import summarize_task
+    from database.read     import search_related_summaries
+    from database.write    import write_summary
+
+    os.environ["GOOGLE_API_KEY"] = gemini_key
+    os.environ["SERPER_API_KEY"] = serper_key
+
+    prev = search_related_summaries(goal) if use_memory else []
+    memory = "\n\n".join(prev) if prev else ""
+
+    queries = [q.strip() for q in planner_task(goal).split("\n") if q.strip()][:max_queries]
+    results = [web_search(q) for q in queries]
+    if not results:
+        return None
+
+    aggregated = aggregate_results(results)
+    if not aggregated:
+        return None
+
+    raw_report = report_task(goal=goal, research_data=aggregated, past_insights=memory)
+
+    # Split chart data out of report text
+    chart_data = None
+    chart_match = re.search(r"<chart>(.*?)</chart>", raw_report, re.DOTALL)
+    if chart_match:
+        try:
+            chart_data = json.loads(chart_match.group(1).strip())
+        except Exception:
+            pass
+    clean_report = re.sub(r"<chart>.*?</chart>", "", raw_report, flags=re.DOTALL).strip()
+
+    summary = summarize_task(clean_report)
+    write_summary(original_text=clean_report, summary=summary, model_name=model)
+
+    return {
+        "queries":      queries,
+        "aggregated":   aggregated,
+        "report":       clean_report,
+        "chart_data":   chart_data,
+        "memory_used":  bool(prev),
+        "timestamp":    datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+
+with TAB_REPORT:
+    goal = st.text_input(
+        "Business goal",
+        placeholder="e.g. Analyze competitive landscape of B2B SaaS invoicing tools in 2025",
     )
+    if not keys_ready:
+        st.warning("Enter your API keys in the sidebar.")
 
-    max_queries = st.slider(
-        "Max Search Queries",
-        min_value=1,
-        max_value=10,
-        value=5,
-        help="Number of search queries the researcher will run."
-    )
-
-    use_memory = st.toggle("🧠 Use Memory", value=True, help="Include past related analyses in the report context.")
-
-    st.divider()
-    st.caption("AI Business Analyzer · Built with Streamlit & Gemini")
-
-
-# =====================================================
-# Session State Control
-# =====================================================
-if "report" not in st.session_state:
-    st.session_state.report = None
-
-if "is_running" not in st.session_state:
-    st.session_state.is_running = False
-
-
-# =====================================================
-# Agent Execution
-# =====================================================
-def run_agent(goal):
-
-    # 🔎 Memory Retrieval
-    previous_summaries = search_related_summaries(goal) if use_memory else []
-    context_memory = "\n\n".join(previous_summaries) if previous_summaries else ""
-
-    # Planner
-    queries = planner_task(goal).split("\n")
-    queries = queries[:max_queries]  # Respect sidebar setting
-    search_results = []
-    aggregated = None
-
-    # Web Search
-    for q in queries:
-        if q.strip():
-            search_results.append(web_search(q.strip()))
-
-    # Aggregation
-    if search_results:
-        aggregated = aggregate_results(search_results)
-
-    # Report Generation
-    if aggregated:
-        report = report_task(goal=goal, research_data=aggregated, past_insights=context_memory)
-
-        # Store summary
-        summary = summarize_task(report)
-        write_summary(
-            original_text=report,
-            summary=summary,
-            model_name=model
-        )
-
-        return {
-            "queries": queries,
-            "aggregated": aggregated,
-            "report": report,
-            "memory_used": bool(previous_summaries)
-        }
-
-    return None
-
-
-# =====================================================
-# UI Layout
-# =====================================================
-with st.container():
-    goal = st.text_input("🎯 Enter your business goal")
-
-    col1, col2 = st.columns([1, 1])
-
+    col1, col2 = st.columns([3, 1])
     with col1:
-        run_button = st.button(
-            "Run Analysis",
-            use_container_width=True,
-            type="primary",
-            disabled=st.session_state.is_running or not keys_ready
+        run_clicked = st.button(
+            "Run Analysis", type="primary", use_container_width=True,
+            disabled=not keys_ready or st.session_state.is_running,
         )
-
     with col2:
-        clear_button = st.button(
-            "Clear",
-            use_container_width=True
-        )
+        clear_clicked = st.button("Clear", use_container_width=True)
 
-# Clear results
-if clear_button:
-    st.session_state.report = None
-    st.rerun()
+    if clear_clicked:
+        st.session_state.report = None
+        st.session_state.chart_data = None
+        st.session_state.last_goal = ""
+        st.rerun()
 
+    if run_clicked:
+        if not goal.strip():
+            st.error("Please enter a business goal.")
+        else:
+            st.session_state.is_running = True
+            st.session_state.last_goal = goal
+            with st.spinner("Running analysis..."):
+                result = run_agent(goal)
+                st.session_state.report = result
+                st.session_state.chart_data = result.get("chart_data") if result else None
+            st.session_state.is_running = False
+            st.rerun()
 
-# =====================================================
-# Controlled Execution
-# =====================================================
-if run_button and goal and not st.session_state.is_running:
-    st.session_state.is_running = True
+    if st.session_state.report:
+        r = st.session_state.report
+        g = st.session_state.last_goal
 
-    with st.spinner("Running AI analysis..."):
-        if not gemini_key or not serper_key:
-            st.error("⚠️ API keys are missing. Configure them in Streamlit Secrets or enter them in the sidebar.")
-            st.stop()  # Prevent further execution
-        result = run_agent(goal)
-        st.session_state.report = result
+        st.divider()
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Queries Run",  len(r["queries"]))
+        c2.metric("Memory",       "On" if r["memory_used"] else "Off")
+        c3.metric("Generated",    r["timestamp"])
+        st.divider()
 
-    st.session_state.is_running = False
-    st.rerun()
+        with st.expander("Search Queries"):
+            for i, q in enumerate(r["queries"], 1):
+                st.write(f"{i}. {q}")
 
+        # Chart
+        cd = r.get("chart_data")
+        if cd:
+            st.subheader(cd.get("title", "Chart"))
+            if cd["type"] == "pie":
+                import pandas as pd
+                df = pd.DataFrame({"label": cd["labels"], "value": cd["values"]}).set_index("label")
+                st.bar_chart(df)          # Streamlit has no native pie; bar is clean
+            else:
+                import pandas as pd
+                df = pd.DataFrame({"value": cd["values"]}, index=cd["labels"])
+                st.bar_chart(df)
 
-# =====================================================
-# Display Results
-# =====================================================
-if st.session_state.report:
+        st.subheader("Strategic Report")
+        st.markdown(r["report"])
+        st.divider()
 
-    result = st.session_state.report
+        # Download PDF
+        slug     = g[:40].strip().lower().replace(" ", "-")
+        filename = f"business-analysis_{slug}_{r['timestamp'].replace(' ','_').replace(':','-')}.pdf"
+        try:
+            pdf_bytes = build_pdf(g, r, report_depth)
+            st.download_button("⬇ Download Report (.pdf)", data=pdf_bytes,
+                               file_name=filename, mime="application/pdf",
+                               use_container_width=True)
+        except Exception as e:
+            st.error(f"PDF generation failed: {e}.")
 
-    st.divider()
+with TAB_CHAT:
+    if not st.session_state.report:
+        st.info("Run an analysis first, then come back to chat about it.")
+    else:
+        from tabs import chat
+        chat.render(st.session_state.report["report"])
 
-    if result["memory_used"]:
-        st.success("🧠 Previous related insights were used.")
+with TAB_SWOT:
+    if not st.session_state.report:
+        st.info("Run an analysis first to generate the SWOT board.")
+    elif not keys_ready:
+        st.warning("API keys required.")
+    else:
+        from tabs import swot
+        swot.render(st.session_state.report["report"])
 
-    with st.expander("🔍 Generated Search Queries", expanded=False):
-        for q in result["queries"]:
-            st.write("-", q)
-
-    with st.expander("📊 Aggregated Results", expanded=False):
-        st.write(result["aggregated"])
-
-    st.divider()
-    st.subheader("📄 Final Strategic Report")
-    st.markdown(result["report"])
+with TAB_HISTORY:
+    from tabs import history
+    history.render()

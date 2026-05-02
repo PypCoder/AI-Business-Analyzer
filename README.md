@@ -1,8 +1,27 @@
+<div align="center">
+
 # 🤖 AI Business Analyzer
 
-![AI Business Analyzer](Visuals//AI-Business-Analyzer.png)
+![AI Business Analyzer](Visuals/AI-Business-Analyzer.png)
+
+<p>
+  <img src="https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Gemini-3 Flash Preview-4285F4?style=for-the-badge&logo=google&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white"/>
+  <img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white"/>
+  <img src="https://img.shields.io/badge/UV-Package Manager-6E56CF?style=for-the-badge&logo=astral&logoColor=white"/>
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge"/>
+</p>
+
+<p>
+  <img src="https://img.shields.io/badge/Live Demo-ai--business--analyzer.streamlit.app-FF4B4B?style=flat-square&logo=streamlit&logoColor=white"/>
+</p>
 
 An autonomous AI-powered business analysis system that researches markets, stores historical insights, and generates structured strategic reports — using persistent memory, live web data, and a clean Streamlit interface.
+
+**[🔗 Live Demo](https://ai-business-analyzer.streamlit.app/)**
+
+</div>
 
 ---
 
@@ -13,6 +32,9 @@ An autonomous AI-powered business analysis system that researches markets, store
 - **Live web search** via Serper.dev API
 - **Persistent memory** with SQLite for historical insight storage
 - **Structured report generation** with actionable business intelligence
+- **SWOT analysis tab** for dedicated strategic breakdown
+- **Chat interface** for interactive follow-up queries
+- **PDF export** for saving and sharing reports
 - **Streamlit front-end** for an intuitive user experience
 - **UV-based** dependency management for fast, reliable installs
 
@@ -28,34 +50,45 @@ User Goal
   → Context Memory
   → Report Generator
   → Memory Storage (SQLite)
-  → Streamlit UI Output
+  → Streamlit UI Output (Chat / History / SWOT tabs)
 ```
 
 ---
 
 ## 🗂 Project Structure
 
-
-
 ```
-├── agent/
-│   ├── planner.py          # LLM-based goal-to-task planner
-│   ├── researcher.py       # Live web search via Serper.dev API
-│   ├── aggregator.py       # Formats & consolidates search results
-│   ├── summarizer.py       # Summarizes aggregated research with LLM
-│   └── reporter.py         # Generates final structured business report
-├── core/
-│   └── llm.py              # Gemini API client & LLM configuration
-├── config/
-│   └── settings.py         # Environment variables & app-wide settings
-├── main.py                 # Streamlit app entry point
-├── database/               # SQLite persistent memory layer
-│   ├── outputs/            # SQLite Database
-│   ├── init_db.py          # Schema creation & database initialization
-│   ├── read.py             # Query historical insights from DB
-│   └── write.py            # Store new analysis results to DB
-├── requirements.txt        # Project dependencies
-└── README.md
+├── Visuals
+│   └── AI-Business-Analyzer.png
+├── agents
+│   ├── __init__.py
+│   ├── aggregator.py
+│   ├── planner.py
+│   ├── reporter.py
+│   ├── researcher.py
+│   └── summarizer.py
+├── config
+│   └── settings.py
+├── core
+│   ├── __init__.py
+│   └── llm.py
+├── database
+│   ├── init_db.py
+│   ├── read.py
+│   └── write.py
+├── tabs
+│   ├── chat.py
+│   ├── history.py
+│   └── swot.py
+├── utils
+│   └── build_pdf.py
+├── .gitignore
+├── LICENSE
+├── README.md
+├── main.py
+├── pyproject.toml
+├── requirements.txt
+└── uv.lock
 ```
 
 ---
@@ -64,12 +97,12 @@ User Goal
 
 | Layer | Tool |
 |---|---|
-| LLM | Gemini API (gemini-2.5-flash) |
+| LLM | Gemini API (`gemini-3-flash-preview`) |
 | Web Search | Serper.dev |
 | Memory | SQLite |
 | Frontend | Streamlit |
 | Package Management | UV |
-| Language | Python |
+| Language | Python 3.12+ |
 
 ---
 
@@ -129,24 +162,16 @@ streamlit run main.py
 - Risks & Challenges
 - Strategic Recommendations
 - 30-60-90 Day Action Plan
+- Exportable PDF Report
+- SWOT Analysis
 
 ---
 
 ## 🌐 Deployment
 
-This app is deployed on **Streamlit Community Cloud**. You can access the live demo here:
+This app is deployed on **Streamlit Community Cloud**.
 
-> 🔗 [Live Demo](https://your-app-name.streamlit.app)
-
----
-
-## 🔮 Future Improvements
-
-- [ ] Deep webpage scraping for richer data
-- [ ] Evaluation agent for output quality control
-- [ ] Iterative task refinement loop
-- [ ] Multi-agent architecture with LangGraph
-- [ ] Advanced memory retrieval system
+> 🔗 [Live Demo](https://ai-business-analyzer.streamlit.app/)
 
 ---
 
@@ -162,8 +187,8 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-<p align="center">
+<div align="center">
   <a href="https://github.com/PypCoder" target="_blank">
     <img src="https://img.shields.io/badge/GitHub-PypCoder-181717?style=for-the-badge&logo=github&logoColor=white" alt="PypCoder GitHub"/>
   </a>
-</p>
+</div>

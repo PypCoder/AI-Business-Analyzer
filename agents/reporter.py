@@ -45,6 +45,19 @@ OUTPUT FORMAT:
 ## 5. Strategic Recommendations
 
 ## 6. 30-60-90 Day Action Plan
+
+----------------------------------------
+After your report, append a section exactly like this (replace values):
+<chart>
+{{
+  "type": "bar",
+  "title": "...",
+  "labels": ["A","B","C"],
+  "values": [10, 20, 30]
+}}
+</chart>
+The chart should visualize the most insightful metric from your analysis (market share, competitor ratings, opportunity scores, etc.).
+Only output ONE <chart> block. Valid types: bar, pie.
 """
 )
 report_chain = report_prompt | llm
