@@ -136,67 +136,56 @@ with TAB_REPORT:
                         status.update(label="❌ Analysis failed", state="error")
                         st.error(str(e))
                         st.exception(e)
-            st.write("appending result to the session_state")
             st.session_state.report = result
-            st.write("done")
-            st.write("getting chart data")
             st.session_state.chart_data = result.get("chart_data") if result else None
-            st.write("done")
-            st.write("setting is_running to false")
             st.session_state.is_running = False
-            st.write("done")
 
     if st.session_state.report:
-        st.success("report exists in session state")
-        st.write(type(st.session_state.report))
-        st.write(list(st.session_state.report.keys()))
+        r = st.session_state.report
+        g = st.session_state.last_goal
 
-    # if st.session_state.report:
-    #     r = st.session_state.report
-    #     g = st.session_state.last_goal
+        st.divider()
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Queries Run", len(r["queries"]))
+        c2.metric("Memory", "On" if r["memory_used"] else "Off")
+        c3.metric("Generated", r["timestamp"])
+        st.divider()
 
-    #     st.divider()
-    #     c1, c2, c3 = st.columns(3)
-    #     c1.metric("Queries Run", len(r["queries"]))
-    #     c2.metric("Memory", "On" if r["memory_used"] else "Off")
-    #     c3.metric("Generated", r["timestamp"])
-    #     st.divider()
+        with st.expander("Search Queries"):
+            for i, q in enumerate(r["queries"], 1):
+                st.write(f"{i}. {q}")
 
-    #     with st.expander("Search Queries"):
-    #         for i, q in enumerate(r["queries"], 1):
-    #             st.write(f"{i}. {q}")
+        # Chart
+        cd = r.get("chart_data")
+        if cd:
+            st.subheader(cd.get("title", "Chart"))
+            if cd["type"] == "pie":
+                import pandas as pd
+                df = pd.DataFrame({"label": cd["labels"], "value": cd["values"]}).set_index("label")
+                st.bar_chart(df)
+            else:
+                import pandas as pd
+                df = pd.DataFrame({"value": cd["values"]}, index=cd["labels"])
+                st.bar_chart(df)
 
-    #     # Chart
-    #     cd = r.get("chart_data")
-    #     if cd:
-    #         st.subheader(cd.get("title", "Chart"))
-    #         if cd["type"] == "pie":
-    #             import pandas as pd
-    #             df = pd.DataFrame({"label": cd["labels"], "value": cd["values"]}).set_index("label")
-    #             st.bar_chart(df)
-    #         else:
-    #             import pandas as pd
-    #             df = pd.DataFrame({"value": cd["values"]}, index=cd["labels"])
-    #             st.bar_chart(df)
+        st.subheader("Strategic Report")
+        sections = r["report"].split("\n## ")
+        for i, section in enumerate(sections):
+            if i == 0:
+                st.markdown(section)
+            else:
+                st.markdown("## " + section)
+        st.divider()
 
-    #     st.subheader("Strategic Report")
-    #     sections = r["report"].split("\n## ")
-    #     for i, section in enumerate(sections):
-    #         if i == 0:
-    #             st.markdown(section)
-    #         else:
-    #             st.markdown("## " + section)
-    #     st.divider()
-
-    #     slug     = g[:40].strip().lower().replace(" ", "-")
-    #     filename = f"business-analysis_{slug}_{r['timestamp'].replace(' ','_').replace(':','-')}.pdf"
-    #     try:
-    #         pdf_bytes = build_pdf(g, r, report_depth)
-    #         st.download_button("⬇ Download Report (.pdf)", data=pdf_bytes,
-    #                            file_name=filename, mime="application/pdf",
-    #                            use_container_width=True)
-    #     except Exception as e:
-    #         st.error(f"PDF generation failed: {e}.")
+        slug     = g[:40].strip().lower().replace(" ", "-")
+        filename = f"business-analysis_{slug}_{r['timestamp'].replace(' ','_').replace(':','-')}.pdf"
+        try:
+            pdf_bytes = build_pdf(g, r, report_depth)
+            st.download_button("⬇ Download Report (.pdf)", data=pdf_bytes,
+                               file_name=filename, mime="application/pdf",
+                               use_container_width=True)
+        except Exception as e:
+            st.error(f"PDF generation failed: {e}.")
 
 with TAB_CHAT:
     if not st.session_state.report:
