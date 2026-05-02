@@ -170,15 +170,22 @@ with TAB_REPORT:
                 st.bar_chart(df)
 
         st.subheader("Strategic Report")
-        st.markdown(r["report"])
+        sections = r["report"].split("\n## ")
+        for i, section in enumerate(sections):
+            if i == 0:
+                st.markdown(section)
+            else:
+                st.markdown("## " + section)
         st.divider()
 
-        # Download PDF
         slug     = g[:40].strip().lower().replace(" ", "-")
         filename = f"business-analysis_{slug}_{r['timestamp'].replace(' ','_').replace(':','-')}.pdf"
         try:
-            pdf_bytes = build_pdf(g, r, report_depth)
-            st.download_button("⬇ Download Report (.pdf)", data=pdf_bytes,
+            if "pdf_bytes" not in st.session_state or st.session_state.get("pdf_goal") != g:
+                st.session_state.pdf_bytes = build_pdf(g, r, report_depth)
+                st.session_state.pdf_goal = g
+
+            st.download_button("⬇ Download Report (.pdf)", data=st.session_state.pdf_bytes,
                                file_name=filename, mime="application/pdf",
                                use_container_width=True)
         except Exception as e:
