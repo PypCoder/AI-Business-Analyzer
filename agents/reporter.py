@@ -1,5 +1,5 @@
 from langchain_core.prompts import ChatPromptTemplate
-from core.llm import get_llm()
+from core.llm import get_llm
 
 llm = get_llm()
 
