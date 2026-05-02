@@ -2,7 +2,7 @@
 
 # 🤖 AI Business Analyzer
 
-![AI Business Analyzer](Visuals/AI-Business-Analyzer.png)
+![AI Business Analyzer](Visuals/main.png)
 
 <p>
   <img src="https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
