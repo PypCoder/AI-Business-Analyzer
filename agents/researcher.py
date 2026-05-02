@@ -1,8 +1,8 @@
 import requests
-from config.settings import SERPER_API_KEY, url
+from config.settings import get_serper, url
 
 def web_search(query: str):
-    headers = {"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"}
+    headers = {"X-API-KEY": get_serper(), "Content-Type": "application/json"}
     payload = {"q": query, "num": 5}
     response = requests.post(url, json=payload, headers=headers)
     data = response.json()

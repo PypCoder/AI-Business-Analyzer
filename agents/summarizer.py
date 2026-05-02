@@ -1,5 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate
-from core.llm import llm
+from core.llm import get_llm
+
+llm = get_llm()
 
 summary_prompt = ChatPromptTemplate.from_template(
 """
@@ -14,8 +16,6 @@ Return only the summary.
 """
 )
 
-summary_chain = summary_prompt | llm
-
-
 def summarize_task(text: str):
+    summary_chain = summary_prompt | llm
     return summary_chain.invoke({"text": text})

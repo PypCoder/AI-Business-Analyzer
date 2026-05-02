@@ -1,11 +1,8 @@
 from langchain_google_genai import GoogleGenerativeAI
-from config.settings import GEMINI_API_KEY, model
+from config.settings import get_gemini, model
 
-# ------------------------------
-# Gemini LLM
-# ------------------------------
-if not GEMINI_API_KEY:
-    ll=None
-    raise ValueError("GEMINI_API_KEY is not set. Please set it in Streamlit Secrets or as an environment variable.")
-else:
-    llm = GoogleGenerativeAI(model=model, temperature=0.3, google_api_key=GEMINI_API_KEY)
+def get_llm():
+    key = get_gemini()
+    if not key:
+        raise ValueError("Gemini API key not set.")
+    return GoogleGenerativeAI(model=model, temperature=0.3, google_api_key=key)

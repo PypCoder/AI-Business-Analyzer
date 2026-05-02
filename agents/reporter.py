@@ -1,5 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate
-from core.llm import llm
+from core.llm import get_llm()
+
+llm = get_llm()
 
 report_prompt = ChatPromptTemplate.from_template(
 """
@@ -60,11 +62,11 @@ The chart should visualize the most insightful metric from your analysis (market
 Only output ONE <chart> block. Valid types: bar, pie.
 """
 )
-report_chain = report_prompt | llm
 
 def report_task(goal, research_data, past_insights=None):
-    return report_chain.invoke({
-        "goal": goal,
-        "research_data": research_data,
-        "past_insights": past_insights or ""
-    })
+  report_chain = report_prompt | llm
+  return report_chain.invoke({
+    "goal": goal,
+    "research_data": research_data,
+    "past_insights": past_insights or ""
+  })
