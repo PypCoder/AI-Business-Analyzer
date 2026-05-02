@@ -1,7 +1,7 @@
 import streamlit as st
 import json, os, re
 from langchain_core.prompts import ChatPromptTemplate
-from core.llm import llm
+from core.llm import get_llm
 
 swot_prompt = ChatPromptTemplate.from_template(
 """Extract a SWOT analysis from the report below.
@@ -12,8 +12,8 @@ Report:
 {report}"""
 )
 
-llm = swot_prompt | llm
 def _parse_swot(report: str) -> dict:
+    llm = swot_prompt | get_llm()
 
     raw = llm.invoke({
         "report": report,

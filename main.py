@@ -48,52 +48,6 @@ st.divider()
 TAB_NAMES = ["📄 Report", "💬 Chat", "🧩 SWOT Board", "🕒 History"]
 tabs = st.tabs(TAB_NAMES)
 TAB_REPORT, TAB_CHAT, TAB_SWOT, TAB_HISTORY = tabs
-# To add a new tab: append to TAB_NAMES, unpack one more variable above, render inside it below.
-
-def run_agent(goal: str) -> dict | None:
-    from agents.planner    import planner_task
-    from agents.researcher import web_search
-    from agents.aggregator import aggregate_results
-    from agents.reporter   import report_task
-    from agents.summarizer import summarize_task
-    from database.read     import search_related_summaries
-    from database.write    import write_summary
-
-    prev = search_related_summaries(goal) if use_memory else []
-    memory = "\n\n".join(prev) if prev else ""
-
-    queries = [q.strip() for q in planner_task(goal).split("\n") if q.strip()][:max_queries]
-    results = [web_search(q) for q in queries]
-    if not results:
-        return None
-
-    aggregated = aggregate_results(results)
-    if not aggregated:
-        return None
-
-    raw_report = report_task(goal=goal, research_data=aggregated, past_insights=memory)
-
-    # Split chart data out of report text
-    chart_data = None
-    chart_match = re.search(r"<chart>(.*?)</chart>", raw_report, re.DOTALL)
-    if chart_match:
-        try:
-            chart_data = json.loads(chart_match.group(1).strip())
-        except Exception:
-            pass
-    clean_report = re.sub(r"<chart>.*?</chart>", "", raw_report, flags=re.DOTALL).strip()
-
-    summary = summarize_task(clean_report)
-    write_summary(original_text=clean_report, summary=summary, model_name=model)
-
-    return {
-        "queries":      queries,
-        "aggregated":   aggregated,
-        "report":       clean_report,
-        "chart_data":   chart_data,
-        "memory_used":  bool(prev),
-        "timestamp":    datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
-    }
 
 with TAB_REPORT:
     goal = st.text_input(
@@ -124,12 +78,70 @@ with TAB_REPORT:
         else:
             st.session_state.is_running = True
             st.session_state.last_goal = goal
-            with st.spinner("Running analysis..."):
-                result = run_agent(goal)
-                st.session_state.report = result
-                st.session_state.chart_data = result.get("chart_data") if result else None
+
+            progress = st.container()
+            with progress:
+                status = st.status("Running analysis...", expanded=True)
+                with status:
+                    st.write("🧠 Planning search queries...")
+                    result = None
+                    try:
+                        from agents.planner import planner_task
+                        from agents.researcher import web_search
+                        from agents.aggregator import aggregate_results
+                        from agents.reporter import report_task
+                        from agents.summarizer import summarize_task
+                        from database.read import search_related_summaries
+                        from database.write import write_summary
+                        import os, re, json
+
+                        os.environ["GOOGLE_API_KEY"] = gemini_key
+                        os.environ["SERPER_API_KEY"] = serper_key
+
+                        prev = search_related_summaries(goal) if use_memory else []
+                        memory = "\n\n".join(prev) if prev else ""
+
+                        queries = [q.strip() for q in planner_task(goal).split("\n") if q.strip()][:max_queries]
+
+                        st.write(f"🔍 Running {len(queries)} web searches...")
+                        results = [web_search(q) for q in queries]
+
+                        st.write("📊 Aggregating results...")
+                        aggregated = aggregate_results(results)
+
+                        st.write("✍️ Generating report...")
+                        raw_report = report_task(goal=goal, research_data=aggregated, past_insights=memory)
+
+                        chart_data = None
+                        chart_match = re.search(r"<chart>(.*?)</chart>", raw_report, re.DOTALL)
+                        if chart_match:
+                            try:
+                                chart_data = json.loads(chart_match.group(1).strip())
+                            except Exception:
+                                pass
+                        clean_report = re.sub(r"<chart>.*?</chart>", "", raw_report, flags=re.DOTALL).strip()
+
+                        st.write("💾 Saving to memory...")
+                        summary = summarize_task(clean_report)
+                        write_summary(original_text=clean_report, summary=summary, model_name=model)
+
+                        result = {
+                            "queries": queries,
+                            "aggregated": aggregated,
+                            "report": clean_report,
+                            "chart_data": chart_data,
+                            "memory_used": bool(prev),
+                            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        }
+                        status.update(label="✅ Analysis complete", state="complete")
+
+                    except Exception as e:
+                        status.update(label="❌ Analysis failed", state="error")
+                        st.error(str(e))
+
+            st.session_state.report = result
+            st.session_state.chart_data = result.get("chart_data") if result else None
             st.session_state.is_running = False
-            st.rerun()
 
     if st.session_state.report:
         r = st.session_state.report

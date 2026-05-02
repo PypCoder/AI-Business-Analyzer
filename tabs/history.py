@@ -1,7 +1,6 @@
 import streamlit as st
 
 def render():
-    # Import here to avoid circular / early import issues
     from database.read import get_all_summaries
 
     st.caption("Past analyses stored in memory.")
